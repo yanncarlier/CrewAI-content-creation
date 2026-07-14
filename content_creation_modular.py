@@ -14,7 +14,25 @@ disable_ssl_verification()
 warnings.filterwarnings('ignore')
 
 os.environ["CREWAI_TESTING"] = "true"
-os.environ["OPENAI_API_KEY"] = get_openai_api_key()
+
+# Load .env (prefer python-dotenv if available), fallback to a simple parser
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    env_path = Path('.env')
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+# Ensure OPENAI_API_KEY is set (fall back to helper)
+if not os.environ.get("OPENAI_API_KEY"):
+    os.environ["OPENAI_API_KEY"] = get_openai_api_key()
 
 # --- 2. Helper Function to Load MD Content ---
 
@@ -43,12 +61,13 @@ task_cfg = load_md_content("task_definitions/create_shorts_plan.md")
 
 # --- 4. Agent Definition ---
 
+llm_model = os.getenv("LLM_MODEL", "nvidia/nemotron-3-ultra-550b-a55b")
+
 content_creator_assistant = Agent(
     role=agent_cfg["role"],
     goal=agent_cfg["goal"],
     backstory=agent_cfg["backstory"],
-    # llm="gpt-4o-mini",
-    llm="nvidia/nemotron-3-ultra-550b-a55b",
+    llm=llm_model,
     verbose=True
 )
 
