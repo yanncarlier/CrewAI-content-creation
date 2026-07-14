@@ -1,7 +1,7 @@
 # modular_versions/content_creation
 
 ## What’s in this module
-Modular, configuration-driven version of the **YouTube Shorts content planning** workflow.
+Modular, configuration-driven version of the **Social Media Shorts content planning** workflow.
 
 ### Program: `content_creation_modular.py`
 This script:
@@ -14,7 +14,7 @@ This script:
 From the repository root:
 
 ```bash
-python modular_versions/content_creation/content_creation_modular.py
+python content_creation_modular.py
 ```
 
 #### Output
@@ -22,5 +22,5 @@ Prints the resulting plan to stdout.
 
 #### Notes
 - Expects an appropriate `.env` (handled in `utils.py`).
-- Uses `modular_versions/content_creation/patch.py` to disable SSL verification in constrained environments.
+- Uses `patch.py` to disable SSL verification in constrained environments.
 
