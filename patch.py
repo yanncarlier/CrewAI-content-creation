@@ -67,8 +67,6 @@ def disable_ssl_verification():
             
             def patched_openai_init(self, *args, **kwargs):
                 # Use environment variables if available, otherwise keep original values
-                if os.getenv("OPENAI_API_KEY"):
-                    kwargs['api_key'] = kwargs.get('api_key', os.getenv("OPENAI_API_KEY"))
                 if os.getenv("OPENAI_API_BASE"):
                     kwargs['base_url'] = kwargs.get('base_url', os.getenv("OPENAI_API_BASE"))
                 

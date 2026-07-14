@@ -6,7 +6,6 @@ import warnings
 from pathlib import Path
 from crewai import Task, Agent, Crew
 from patch import disable_ssl_verification
-from utils import get_openai_api_key
 
 # --- 1. Environment Configuration ---
 
@@ -29,10 +28,6 @@ except Exception:
             if '=' in line:
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
-
-# Ensure OPENAI_API_KEY is set (fall back to helper)
-if not os.environ.get("OPENAI_API_KEY"):
-    os.environ["OPENAI_API_KEY"] = get_openai_api_key()
 
 # --- 2. Helper Function to Load MD Content ---
 
