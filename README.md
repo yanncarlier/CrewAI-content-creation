@@ -39,7 +39,7 @@ uv add crewai
 uv add 'crewai[litellm]'
 uv add patch
 
-crewai tools crewai_tools exa_py dill
+uv add tools crewai_tools exa_py dill
 uv pip install dlai-grader
 
 uv pip freeze > requirements.txt
