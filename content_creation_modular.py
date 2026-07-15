@@ -3,6 +3,7 @@
 import os
 import re
 import warnings
+import json
 from pathlib import Path
 from crewai import Task, Agent, Crew
 from patch import disable_ssl_verification
@@ -51,6 +52,103 @@ def load_md_content(file_path):
         "description": extract_section("Description", content),
         "expected_output": extract_section("Expected Output", content)
     }
+
+
+# --- 3.5. File Creation Functions ---
+
+def create_output_directory():
+    """Create the output directory if it doesn't exist."""
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
+    return output_dir
+
+
+def save_json_file(post, post_index, output_dir):
+    """Save a single post as a JSON file."""
+    json_file = output_dir / f"post_{post_index}.json"
+    with open(json_file, 'w', encoding='utf-8') as f:
+        json.dump(post, f, indent=2, ensure_ascii=False)
+    return json_file
+
+
+def save_markdown_file(post, post_index, output_dir):
+    """Save a single post as a Markdown file."""
+    md_file = output_dir / f"post_{post_index}.md"
+    
+    md_content = f"""# {post.get('day', 'Post')} - {post.get('target_platform', 'Social Media')}
+
+## Hook
+{post.get('hook_line', '')}
+
+## Content
+{post.get('body_text', '')}
+
+## Narrative Twist
+{post.get('narrative_twist', '')}
+
+## Call to Action
+{post.get('cta', '')}
+
+## Tags
+{' '.join(post.get('tags', []))}
+"""
+    
+    with open(md_file, 'w', encoding='utf-8') as f:
+        f.write(md_content)
+    return md_file
+
+
+def save_html_file(post, post_index, output_dir):
+    """Save a single post as an HTML file (no CSS, no JS)."""
+    html_file = output_dir / f"post_{post_index}.html"
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post {post_index}: {post.get('day', 'Post')}</title>
+</head>
+<body>
+    <h1>{post.get('day', 'Post')} - {post.get('target_platform', 'Social Media')}</h1>
+    
+    <h2>Hook</h2>
+    <p>{post.get('hook_line', '')}</p>
+    
+    <h2>Content</h2>
+    <pre>{post.get('body_text', '')}</pre>
+    
+    <h2>Narrative Twist</h2>
+    <p>{post.get('narrative_twist', '')}</p>
+    
+    <h2>Call to Action</h2>
+    <p>{post.get('cta', '')}</p>
+    
+    <h2>Tags</h2>
+    <p>{' '.join(post.get('tags', []))}</p>
+</body>
+</html>
+"""
+    
+    with open(html_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    return html_file
+
+
+def save_all_formats(posts_data, output_dir):
+    """Save all posts in JSON, Markdown, and HTML formats."""
+    created_files = []
+    
+    posts = posts_data if isinstance(posts_data, list) else posts_data.get('posts', [])
+    
+    for index, post in enumerate(posts, start=1):
+        json_file = save_json_file(post, index, output_dir)
+        md_file = save_markdown_file(post, index, output_dir)
+        html_file = save_html_file(post, index, output_dir)
+        created_files.extend([json_file, md_file, html_file])
+        print(f"  Created: {json_file.name}, {md_file.name}, {html_file.name}")
+    
+    return created_files
 
 # --- 3. Resource Loading ---
 
@@ -115,6 +213,26 @@ def run_content_planner():
     print("=" * 80)
     print(result.raw)
     
+    # Save content to files (JSON, Markdown, HTML)
+    output_dir = create_output_directory()
+    print("\n" + "=" * 80)
+    print("SAVING CONTENT FILES")
+    print("=" * 80)
+    
+    try:
+        raw_content = result.raw.strip()
+        # Try to parse as JSON
+        if raw_content.startswith('{') or raw_content.startswith('['):
+            posts_data = json.loads(raw_content)
+            save_all_formats(posts_data, output_dir)
+            print(f"\nFiles saved to: {output_dir.absolute()}")
+        else:
+            print("  Result is not JSON, cannot save individual post files.")
+    except json.JSONDecodeError as e:
+        print(f"  Could not parse result as JSON: {e}")
+    except Exception as e:
+        print(f"  Error saving files: {e}")
+    
     return result
 
 
@@ -166,7 +284,6 @@ if __name__ == "__main__":
     auto_post = os.getenv("AUTO_POST_TO_X", "false").lower() == "true"
     
     if auto_post and result and hasattr(result, 'raw'):
-        import json
         try:
             raw_content = result.raw.strip()
             # Try to parse as JSON first
