@@ -75,21 +75,14 @@ def save_markdown_file(post, post_index, output_dir):
     """Save a single post as a Markdown file."""
     md_file = output_dir / f"post_{post_index}.md"
     
-    md_content = f"""# {post.get('day', 'Post')} - {post.get('target_platform', 'Social Media')}
+    md_content = f"""{post.get('hook_line', '')}
 
-## Hook
-{post.get('hook_line', '')}
-
-## Content
 {post.get('body_text', '')}
 
-## Narrative Twist
 {post.get('narrative_twist', '')}
 
-## Call to Action
 {post.get('cta', '')}
 
-## Tags
 {' '.join(post.get('tags', []))}
 """
     
@@ -107,24 +100,17 @@ def save_html_file(post, post_index, output_dir):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post {post_index}: {post.get('day', 'Post')}</title>
+    <title>Post {post_index}</title>
 </head>
 <body>
-    <h1>{post.get('day', 'Post')} - {post.get('target_platform', 'Social Media')}</h1>
-    
-    <h2>Hook</h2>
     <p>{post.get('hook_line', '')}</p>
     
-    <h2>Content</h2>
     <pre>{post.get('body_text', '')}</pre>
     
-    <h2>Narrative Twist</h2>
     <p>{post.get('narrative_twist', '')}</p>
     
-    <h2>Call to Action</h2>
     <p>{post.get('cta', '')}</p>
     
-    <h2>Tags</h2>
     <p>{' '.join(post.get('tags', []))}</p>
 </body>
 </html>
@@ -220,14 +206,24 @@ def run_content_planner():
     print("=" * 80)
     
     try:
-        raw_content = result.raw.strip()
-        # Try to parse as JSON
-        if raw_content.startswith('{') or raw_content.startswith('['):
-            posts_data = json.loads(raw_content)
-            save_all_formats(posts_data, output_dir)
-            print(f"\nFiles saved to: {output_dir.absolute()}")
+        raw_content = result.raw
+        # Handle if raw_content is already a dict or list
+        if isinstance(raw_content, (dict, list)):
+            posts_data = raw_content
+        elif isinstance(raw_content, str):
+            # Try to parse as JSON string
+            raw_content = raw_content.strip()
+            if raw_content.startswith('{') or raw_content.startswith('['):
+                posts_data = json.loads(raw_content)
+            else:
+                print("  Result is not JSON, cannot save individual post files.")
+                return result
         else:
-            print("  Result is not JSON, cannot save individual post files.")
+            print(f"  Unexpected result type: {type(raw_content)}, cannot save files.")
+            return result
+        
+        save_all_formats(posts_data, output_dir)
+        print(f"\nFiles saved to: {output_dir.absolute()}")
     except json.JSONDecodeError as e:
         print(f"  Could not parse result as JSON: {e}")
     except Exception as e:
