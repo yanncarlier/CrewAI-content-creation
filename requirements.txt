@@ -99,7 +99,7 @@ pydantic==2.12.5
 pydantic-core==2.41.5
 pydantic-settings==2.10.1
 pygments==2.20.0
-pyjwt==2.13.0
+pyjwt==2.15.0
 pypdfium2==5.11.0
 pypika==0.51.1
 pyproject-hooks==1.2.0
