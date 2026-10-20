@@ -132,7 +132,7 @@ typing-inspection==0.4.2
 tzdata==2026.3
 uc-micro-py==2.0.0
 urllib3==2.7.0
-uv==0.11.28
+uv==0.13.4
 uvicorn==0.51.0
 uvloop==0.22.1
 watchfiles==1.2.0
